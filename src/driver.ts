@@ -6,17 +6,17 @@
 
 import { IRequestConfig, IResponseConfig, RequestDriver } from "@barktler/driver";
 
-export const generateFetchRequest = <Body>(request: IRequestConfig<Body>): RequestInfo => {
+export const generateFetchRequest = <Body>(request: IRequestConfig<Body>): RequestInit => {
 
     return {
-
-        url: request.url,
 
         mode: 'cors',
         method: request.method,
 
-        headers: request.headers as any,
-        body: request.body as any,
+        headers: request.headers,
+        body: request.body
+            ? JSON.stringify(request.body)
+            : undefined,
     };
 };
 
@@ -36,9 +36,9 @@ export const parseFetchResponse = async <Data>(response: Response): Promise<IRes
 
 export const fetchDriver: RequestDriver = async <Body extends any = any, Data extends any = any>(request: IRequestConfig<Body>): Promise<IResponseConfig<Data>> => {
 
-    const requestConfig: RequestInfo = generateFetchRequest<Body>(request);
+    const requestInit: RequestInit = generateFetchRequest<Body>(request);
 
-    const rawResponse: Response = await fetch(requestConfig);
+    const rawResponse: Response = await fetch(request.url, requestInit);
 
     const response: IResponseConfig<Data> = await parseFetchResponse<Data>(rawResponse);
     return response;
