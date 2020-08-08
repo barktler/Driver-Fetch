@@ -15,7 +15,6 @@
     "url": "https://github.com/barktler/Driver-Fetch/issues"
   },
   "homepage": "https://github.com/barktler/Driver-Fetch#readme",
-  "dependencies": {},
   "devDependencies": {
     "@barktler/driver": "^1.4.0",
     "@sudoo/io": "^1.8.0",
