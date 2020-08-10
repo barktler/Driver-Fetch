@@ -4,14 +4,16 @@
  * @description Driver
  */
 
-import { IRequestConfig, IResponseConfig, RequestDriver, PendingRequest } from "@barktler/driver";
+import { IRequestConfig, IResponseConfig, PendingRequest, RequestDriver } from "@barktler/driver";
 
-export const generateFetchRequest = <Body>(request: IRequestConfig<Body>): RequestInit => {
+export const generateFetchRequest = <Body>(request: IRequestConfig<Body>, abortController: AbortController): RequestInit => {
 
     return {
 
         mode: 'cors',
         method: request.method,
+
+        signal: abortController.signal,
 
         headers: request.headers,
         body: request.body
@@ -36,10 +38,20 @@ export const parseFetchResponse = async <Data>(response: Response): Promise<IRes
 
 export const fetchDriver: RequestDriver = <Body extends any = any, Data extends any = any>(request: IRequestConfig<Body>): PendingRequest<Body, Data> => {
 
-    const requestInit: RequestInit = generateFetchRequest<Body>(request);
+    const abortController: AbortController = new AbortController();
+    const requestInit: RequestInit = generateFetchRequest<Body>(request, abortController);
 
-    const rawResponse: Response = await fetch(request.url, requestInit);
+    const pending: PendingRequest<Body, Data> = PendingRequest.create({
 
-    const response: IResponseConfig<Data> = await parseFetchResponse<Data>(rawResponse);
-    return response;
+        response: (async (): Promise<IResponseConfig<Data>> => {
+
+            const rawResponse: Response = await fetch(request.url, requestInit);
+            const response: IResponseConfig<Data> = await parseFetchResponse<Data>(rawResponse);
+            return response;
+        })(),
+        abort: () => {
+            abortController.abort();
+        },
+    });
+    return pending;
 };
