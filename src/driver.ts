@@ -4,7 +4,7 @@
  * @description Driver
  */
 
-import { IRequestConfig, IResponseConfig, RequestDriver } from "@barktler/driver";
+import { IRequestConfig, IResponseConfig, RequestDriver, PendingRequest } from "@barktler/driver";
 
 export const generateFetchRequest = <Body>(request: IRequestConfig<Body>): RequestInit => {
 
@@ -34,7 +34,7 @@ export const parseFetchResponse = async <Data>(response: Response): Promise<IRes
     };
 };
 
-export const fetchDriver: RequestDriver = async <Body extends any = any, Data extends any = any>(request: IRequestConfig<Body>): Promise<IResponseConfig<Data>> => {
+export const fetchDriver: RequestDriver = <Body extends any = any, Data extends any = any>(request: IRequestConfig<Body>): PendingRequest<Body, Data> => {
 
     const requestInit: RequestInit = generateFetchRequest<Body>(request);
 
