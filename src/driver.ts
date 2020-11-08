@@ -13,7 +13,7 @@ export type AxiosDriverOptions = {
 
 export const generateFetchRequest = <Body>(request: IRequestConfig<Body>, abortController: AbortController, options: AxiosDriverOptions): RequestInit => {
 
-    let data: BodyInit;
+    let data: BodyInit | undefined;
 
     if (typeof request.body === 'undefined' || request.body === null) {
 
