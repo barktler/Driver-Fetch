@@ -14,3 +14,21 @@ yarn add @barktler/driver-fetch
 # Or
 npm install @barktler/driver-fetch --save
 ```
+
+## Usage
+
+Create Fetch driver with json body formatter
+
+```ts
+import { createFetchDriver } from "@barktler/driver-fetch";
+api.useDriver(createFetchDriver());
+```
+
+Create Fetch driver with form data body formatter
+
+```ts
+import { createFetchDriver } from "@barktler/driver-fetch";
+api.useDriver(createFetchDriver({
+    bodyType: 'form-data',
+}));
+```
