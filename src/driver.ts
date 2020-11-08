@@ -6,6 +6,9 @@
 
 import { IRequestConfig, IResponseConfig, PendingRequest, RequestDriver } from "@barktler/driver";
 
+export type AxiosDriverOptions = {
+};
+
 export const generateFetchRequest = <Body>(request: IRequestConfig<Body>, abortController: AbortController): RequestInit => {
 
     return {
@@ -36,22 +39,27 @@ export const parseFetchResponse = async <Data>(response: Response): Promise<IRes
     };
 };
 
-export const fetchDriver: RequestDriver = <Body extends any = any, Data extends any = any>(request: IRequestConfig<Body>): PendingRequest<Body, Data> => {
+export const createFetchDriver = (options: Partial<AxiosDriverOptions>): RequestDriver => {
 
-    const abortController: AbortController = new AbortController();
-    const requestInit: RequestInit = generateFetchRequest<Body>(request, abortController);
+    const fetchDriver: RequestDriver = <Body extends any = any, Data extends any = any>(request: IRequestConfig<Body>): PendingRequest<Body, Data> => {
 
-    const pending: PendingRequest<Body, Data> = PendingRequest.create({
+        const abortController: AbortController = new AbortController();
+        const requestInit: RequestInit = generateFetchRequest<Body>(request, abortController);
 
-        response: (async (): Promise<IResponseConfig<Data>> => {
+        const pending: PendingRequest<Body, Data> = PendingRequest.create({
 
-            const rawResponse: Response = await fetch(request.url, requestInit);
-            const response: IResponseConfig<Data> = await parseFetchResponse<Data>(rawResponse);
-            return response;
-        })(),
-        abort: () => {
-            abortController.abort();
-        },
-    });
-    return pending;
+            response: (async (): Promise<IResponseConfig<Data>> => {
+
+                const rawResponse: Response = await fetch(request.url, requestInit);
+                const response: IResponseConfig<Data> = await parseFetchResponse<Data>(rawResponse);
+                return response;
+            })(),
+            abort: () => {
+                abortController.abort();
+            },
+        });
+        return pending;
+    };
+
+    return fetchDriver;
 };
