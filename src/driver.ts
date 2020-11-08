@@ -7,9 +7,29 @@
 import { IRequestConfig, IResponseConfig, PendingRequest, RequestDriver } from "@barktler/driver";
 
 export type AxiosDriverOptions = {
+
+    readonly bodyType: 'json' | 'form-data';
 };
 
-export const generateFetchRequest = <Body>(request: IRequestConfig<Body>, abortController: AbortController): RequestInit => {
+export const generateFetchRequest = <Body>(request: IRequestConfig<Body>, abortController: AbortController, options: AxiosDriverOptions): RequestInit => {
+
+    let data: BodyInit;
+
+    if (typeof request.body === 'undefined' || request.body === null) {
+
+        data = undefined;
+    } else if (options.bodyType === 'json') {
+
+        data = JSON.stringify(request.body);
+    } else if (options.bodyType === 'form-data') {
+
+        const formData: FormData = new FormData();
+        const keys: Array<keyof Body> = Object.keys(request.body) as Array<keyof Body>;
+
+        for (const key of keys) {
+            formData.append(key as string, request.body[key] as any);
+        }
+    }
 
     return {
 
@@ -19,9 +39,7 @@ export const generateFetchRequest = <Body>(request: IRequestConfig<Body>, abortC
         signal: abortController.signal,
 
         headers: request.headers,
-        body: request.body
-            ? JSON.stringify(request.body)
-            : undefined,
+        body: data,
     };
 };
 
@@ -41,10 +59,16 @@ export const parseFetchResponse = async <Data>(response: Response): Promise<IRes
 
 export const createFetchDriver = (options: Partial<AxiosDriverOptions>): RequestDriver => {
 
+    const mergedOptions: AxiosDriverOptions = {
+
+        bodyType: 'json',
+        ...options,
+    };
+
     const fetchDriver: RequestDriver = <Body extends any = any, Data extends any = any>(request: IRequestConfig<Body>): PendingRequest<Body, Data> => {
 
         const abortController: AbortController = new AbortController();
-        const requestInit: RequestInit = generateFetchRequest<Body>(request, abortController);
+        const requestInit: RequestInit = generateFetchRequest<Body>(request, abortController, mergedOptions);
 
         const pending: PendingRequest<Body, Data> = PendingRequest.create({
 
