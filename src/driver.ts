@@ -57,7 +57,7 @@ export const parseFetchResponse = async <Data>(response: Response): Promise<IRes
     };
 };
 
-export const createFetchDriver = (options: Partial<AxiosDriverOptions>): RequestDriver => {
+export const createFetchDriver = (options: Partial<AxiosDriverOptions> = {}): RequestDriver => {
 
     const mergedOptions: AxiosDriverOptions = {
 
