@@ -70,15 +70,33 @@ export const createFetchDriver = (options: Partial<AxiosDriverOptions> = {}): Re
         const abortController: AbortController = new AbortController();
         const requestInit: RequestInit = generateFetchRequest<Body>(request, abortController, mergedOptions);
 
+        const timer: any = typeof request.timeout === 'number'
+            ? setTimeout(() => {
+
+                if (abortController.signal.aborted) {
+                    return;
+                }
+                abortController.abort();
+            }, request.timeout)
+            : undefined;
+
         const pending: PendingRequest<Body, Data> = PendingRequest.create({
 
             response: (async (): Promise<IResponseConfig<Data>> => {
 
                 const rawResponse: Response = await fetch(request.url, requestInit);
+
+                clearTimeout(timer);
+
                 const response: IResponseConfig<Data> = await parseFetchResponse<Data>(rawResponse);
                 return response;
             })(),
             abort: () => {
+
+                clearTimeout(timer);
+                if (abortController.signal.aborted) {
+                    return;
+                }
                 abortController.abort();
             },
         });
