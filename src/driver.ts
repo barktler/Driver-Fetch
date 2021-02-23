@@ -49,11 +49,27 @@ export const parseFetchResponse = async <Data>(response: Response): Promise<IRes
 
     return {
 
+        succeed: true,
+
         data,
         status: response.status,
         statusText: response.statusText,
 
         headers: response.headers as any,
+    };
+};
+
+export const parseFetchError = async <Data>(error: any): Promise<IResponseConfig<Data>> => {
+
+    return {
+
+        succeed: false,
+
+        data: error.toString(),
+        status: 500,
+        statusText: "ERROR",
+
+        headers: {},
     };
 };
 
@@ -82,15 +98,29 @@ export const createFetchDriver = (options: Partial<AxiosDriverOptions> = {}): Re
 
         const pending: PendingRequest<Body, Data> = PendingRequest.create({
 
-            response: (async (): Promise<IResponseConfig<Data>> => {
+            response: new Promise<IResponseConfig<Data>>((resolve: (response: IResponseConfig<Data>) => void) => {
 
-                const rawResponse: Response = await fetch(request.url, requestInit);
+                fetch(request.url, requestInit).then((rawResponse: Response) => {
 
-                clearTimeout(timer);
+                    clearTimeout(timer);
 
-                const response: IResponseConfig<Data> = await parseFetchResponse<Data>(rawResponse);
-                return response;
-            })(),
+                    return parseFetchResponse<Data>(rawResponse);
+                }).then((parsedResponse: IResponseConfig<Data>) => {
+
+                    resolve(parsedResponse);
+                    return;
+                }).catch((rawErrorResponse: any) => {
+
+                    clearTimeout(timer);
+
+                    parseFetchError(rawErrorResponse).then((result: IResponseConfig<any>) => {
+
+                        resolve(result);
+                        return;
+                    });
+                    return;
+                });
+            }),
             abort: () => {
 
                 clearTimeout(timer);
